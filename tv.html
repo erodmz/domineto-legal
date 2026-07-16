@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Domineto — Pizarra en la TV</title>
+<link rel="icon" href="domineto.png" type="image/png">
 <style>
   /* Navegadores de Smart TV: nada moderno, todo simple. */
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,6 +16,9 @@
     overflow: hidden;
   }
   .wrap { padding: 3vh 4vw; height: 100vh; display: flex; flex-direction: column; }
+
+  /* La ficha del logo, la misma del ícono de la app */
+  .logo { display: inline-block; vertical-align: middle; }
 
   /* Pantalla de entrada del código */
   #entrada { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
@@ -38,7 +42,7 @@
   .estado { display: flex; align-items: center; }
   .punto { width: 1.4vh; height: 1.4vh; border-radius: 50%; background: #2ECC71; margin-right: 1vh; }
   .punto.off { background: #FFA726; }
-  .marca { color: #8A8F98; }
+  .marca { color: #8A8F98; display: flex; align-items: center; }
   .meta { text-align: center; color: #8A8F98; font-size: 2vh; margin-top: 1vh; }
 
   .equipos { display: flex; align-items: center; justify-content: space-around; flex: 1; }
@@ -61,7 +65,19 @@
 <div class="wrap">
 
   <div id="entrada">
-    <h1>🁡 Pizarra de Domineto en la TV</h1>
+    <svg class="logo" width="11vh" height="11vh" viewBox="0 0 1024 1024" role="img" aria-label="Domineto" style="margin-bottom:2vh">
+      <rect x="0" y="0" width="1024" height="1024" rx="230" fill="#FFB300"/>
+      <g transform="rotate(-14 512 512)">
+        <rect x="293.5" y="116" width="437" height="792" rx="55" fill="#22252B"/>
+        <line x1="341.5" y1="512" x2="682.5" y2="512" stroke="#4A4E57" stroke-width="14"/>
+        <circle cx="389.2" cy="232.4" r="34" fill="#FAF7F0"/>
+        <circle cx="512" cy="314" r="34" fill="#FAF7F0"/>
+        <circle cx="634.8" cy="395.5" r="34" fill="#FAF7F0"/>
+        <circle cx="416.3" cy="628.4" r="34" fill="#FAF7F0"/>
+        <circle cx="607.7" cy="791.6" r="34" fill="#FAF7F0"/>
+      </g>
+    </svg>
+    <h1>Pizarra de Domineto en la TV</h1>
     <p>Escribe el código que muestra la app del que está anotando</p>
     <input id="codigo" placeholder="DMTO-XXXX-XXXX-XXXX" autocomplete="off" autofocus>
     <button id="entrar">Ver la pizarra</button>
@@ -71,7 +87,19 @@
   <div id="pizarra">
     <div class="barra">
       <span class="estado"><span class="punto" id="punto"></span><span id="estadoTxt">EN VIVO</span></span>
-      <span class="marca">🁡 Domineto</span>
+      <span class="marca">
+        <svg class="logo" width="2.6vh" height="2.6vh" viewBox="0 0 1024 1024" role="img" aria-label="Domineto" style="margin-right:0.8vh">
+          <rect x="0" y="0" width="1024" height="1024" rx="230" fill="#FFB300"/>
+          <g transform="rotate(-14 512 512)">
+            <rect x="293.5" y="116" width="437" height="792" rx="55" fill="#22252B"/>
+            <line x1="341.5" y1="512" x2="682.5" y2="512" stroke="#4A4E57" stroke-width="14"/>
+            <circle cx="389.2" cy="232.4" r="34" fill="#FAF7F0"/>
+            <circle cx="512" cy="314" r="34" fill="#FAF7F0"/>
+            <circle cx="634.8" cy="395.5" r="34" fill="#FAF7F0"/>
+            <circle cx="416.3" cy="628.4" r="34" fill="#FAF7F0"/>
+            <circle cx="607.7" cy="791.6" r="34" fill="#FAF7F0"/>
+          </g>
+        </svg>Domineto</span>
     </div>
     <div class="meta" id="meta"></div>
     <div class="equipos">
@@ -90,7 +118,22 @@
 
 </div>
 
-<div id="ganador"><div class="txt" id="ganadorTxt"></div><div class="sub">🎉 🁡 🎉</div></div>
+<div id="ganador">
+  <svg class="logo" width="14vh" height="14vh" viewBox="0 0 1024 1024" role="img" aria-label="Domineto" style="margin-bottom:3vh">
+    <rect x="0" y="0" width="1024" height="1024" rx="230" fill="#FFB300"/>
+    <g transform="rotate(-14 512 512)">
+      <rect x="293.5" y="116" width="437" height="792" rx="55" fill="#22252B"/>
+      <line x1="341.5" y1="512" x2="682.5" y2="512" stroke="#4A4E57" stroke-width="14"/>
+      <circle cx="389.2" cy="232.4" r="34" fill="#FAF7F0"/>
+      <circle cx="512" cy="314" r="34" fill="#FAF7F0"/>
+      <circle cx="634.8" cy="395.5" r="34" fill="#FAF7F0"/>
+      <circle cx="416.3" cy="628.4" r="34" fill="#FAF7F0"/>
+      <circle cx="607.7" cy="791.6" r="34" fill="#FAF7F0"/>
+    </g>
+  </svg>
+  <div class="txt" id="ganadorTxt"></div>
+  <div class="sub">🎉 🎉 🎉</div>
+</div>
 
 <script>
 (function () {
