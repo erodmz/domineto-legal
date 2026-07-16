@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domineto — Pizarra en la TV</title>
+<style>
+  /* Navegadores de Smart TV: nada moderno, todo simple. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    background: #16181D;
+    color: #E8E4D8;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  .wrap { padding: 3vh 4vw; height: 100vh; display: flex; flex-direction: column; }
+
+  /* Pantalla de entrada del código */
+  #entrada { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+  #entrada h1 { font-size: 4vh; font-weight: normal; margin-bottom: 1vh; }
+  #entrada p { color: #8A8F98; font-size: 2.2vh; margin-bottom: 4vh; }
+  #codigo {
+    font-size: 4.5vh; letter-spacing: 0.4vh; text-align: center; text-transform: uppercase;
+    padding: 1.5vh 2vw; border-radius: 1vh; border: 0.4vh solid #4A4E57;
+    background: #22252B; color: #FFD740; font-family: inherit; width: 60vw; max-width: 700px;
+  }
+  #codigo:focus { outline: none; border-color: #FFD740; }
+  #entrar {
+    margin-top: 3vh; font-size: 3vh; padding: 1.5vh 5vw; border: none; border-radius: 1vh;
+    background: #FFD740; color: #22252B; font-family: inherit; font-weight: bold; cursor: pointer;
+  }
+  #error { color: #E57373; font-size: 2.2vh; margin-top: 2vh; height: 3vh; }
+
+  /* Pizarra */
+  #pizarra { display: none; height: 100%; flex-direction: column; }
+  .barra { display: flex; justify-content: space-between; align-items: center; font-size: 2vh; }
+  .estado { display: flex; align-items: center; }
+  .punto { width: 1.4vh; height: 1.4vh; border-radius: 50%; background: #2ECC71; margin-right: 1vh; }
+  .punto.off { background: #FFA726; }
+  .marca { color: #8A8F98; }
+  .meta { text-align: center; color: #8A8F98; font-size: 2vh; margin-top: 1vh; }
+
+  .equipos { display: flex; align-items: center; justify-content: space-around; flex: 1; }
+  .equipo { text-align: center; }
+  .nombre { font-size: 4vh; color: #E8E4D8; margin-bottom: 1vh; }
+  .puntos { font-size: 18vh; line-height: 1; color: #FFD740; font-weight: bold; }
+  .guion { font-size: 8vh; color: #4A4E57; }
+
+  .rondas { display: flex; flex-wrap: wrap; gap: 1vh; justify-content: center; padding-bottom: 1vh; max-height: 14vh; overflow: hidden; }
+  .ronda { background: #22252B; color: #B9B2A4; font-size: 1.9vh; padding: 0.6vh 1.6vh; border-radius: 3vh; white-space: nowrap; }
+
+  /* Ganador */
+  #ganador { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.88); align-items: center; justify-content: center; flex-direction: column; text-align: center; }
+  #ganador .txt { font-size: 7vh; color: #FFD740; font-weight: bold; }
+  #ganador .sub { font-size: 3vh; color: #E8E4D8; margin-top: 2vh; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="entrada">
+    <h1>🁡 Pizarra de Domineto en la TV</h1>
+    <p>Escribe el código que muestra la app del que está anotando</p>
+    <input id="codigo" placeholder="DMTO-XXXX-XXXX-XXXX" autocomplete="off" autofocus>
+    <button id="entrar">Ver la pizarra</button>
+    <div id="error"></div>
+  </div>
+
+  <div id="pizarra">
+    <div class="barra">
+      <span class="estado"><span class="punto" id="punto"></span><span id="estadoTxt">EN VIVO</span></span>
+      <span class="marca">🁡 Domineto</span>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div class="equipos">
+      <div class="equipo">
+        <div class="nombre" id="n1"></div>
+        <div class="puntos" id="p1">0</div>
+      </div>
+      <div class="guion">—</div>
+      <div class="equipo">
+        <div class="nombre" id="n2"></div>
+        <div class="puntos" id="p2">0</div>
+      </div>
+    </div>
+    <div class="rondas" id="rondas"></div>
+  </div>
+
+</div>
+
+<div id="ganador"><div class="txt" id="ganadorTxt"></div><div class="sub">🎉 🁡 🎉</div></div>
+
+<script>
+(function () {
+  'use strict';
+  var NTFY = 'https://ntfy.sh';
+  var ALFABETO = '23456789abcdefghjkmnpqrstuvwxyz';
+
+  var el = function (id) { return document.getElementById(id); };
+
+  // Mismo parser que la app: acepta el código con o sin DMTO- y guiones.
+  function parseCodigo(txt) {
+    var s = String(txt || '').toLowerCase().replace(/dmto-/g, '').replace(/-/g, '').replace(/\s/g, '');
+    if (s.length !== 12) return null;
+    for (var i = 0; i < s.length; i++) {
+      if (ALFABETO.indexOf(s.charAt(i)) === -1) return null;
+    }
+    return s;
+  }
+
+  function pintar(e) {
+    if (e.end) { // el que anotaba dejó de compartir
+      location.hash = '';
+      location.reload();
+      return;
+    }
+    el('n1').textContent = e.t1n;
+    el('n2').textContent = e.t2n;
+    el('p1').textContent = e.t1;
+    el('p2').textContent = e.t2;
+    el('meta').textContent = 'Partida a ' + e.target + ' puntos';
+
+    var html = '';
+    var log = e.log || [];
+    // Solo las últimas rondas: en la TV no cabe (ni hace falta) el historial completo.
+    for (var i = Math.max(0, log.length - 8); i < log.length; i++) {
+      var r = log[i];
+      html += '<span class="ronda">R' + (i + 1) + (r[2] ? ' ⚖' : '') + ' · ' + r[0] + '–' + r[1] + '</span>';
+    }
+    el('rondas').innerHTML = html;
+
+    if (e.done) {
+      var gano = e.t1 >= e.target ? e.t1n : e.t2n;
+      el('ganadorTxt').textContent = '¡Ganó ' + gano + '!';
+      el('ganador').style.display = 'flex';
+    } else {
+      el('ganador').style.display = 'none';
+    }
+  }
+
+  function conexion(viva) {
+    el('punto').className = viva ? 'punto' : 'punto off';
+    el('estadoTxt').textContent = viva ? 'EN VIVO' : 'Sin señal — reconectando…';
+  }
+
+  function leerMensaje(texto) {
+    try {
+      var e = JSON.parse(texto);
+      if (e && e.t1n !== undefined) pintar(e);
+    } catch (err) { /* mensaje ajeno: se ignora */ }
+  }
+
+  // El estado actual (ntfy cachea ~12 h): pinta la partida en curso de una,
+  // sin esperar a que anoten el próximo punto.
+  function ponerseAlDia(topico) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', NTFY + '/' + topico + '/json?poll=1&since=all', true);
+    xhr.onload = function () {
+      var lineas = xhr.responseText.split('\n');
+      for (var i = 0; i < lineas.length; i++) {
+        if (!lineas[i]) continue;
+        try {
+          var sobre = JSON.parse(lineas[i]);
+          if (sobre.event === 'message') leerMensaje(sobre.message);
+        } catch (err) { /* ignorar */ }
+      }
+    };
+    xhr.send();
+  }
+
+  var fuente = null;
+  var intento = 0;
+
+  // Conexión abierta: ntfy EMPUJA cada cambio. La TV se actualiza sola, nadie
+  // toca el control remoto.
+  function escuchar(topico) {
+    if (fuente) fuente.close();
+    fuente = new EventSource(NTFY + '/' + topico + '/sse');
+
+    fuente.onopen = function () { intento = 0; conexion(true); };
+    fuente.onmessage = function (ev) {
+      conexion(true);
+      try {
+        var sobre = JSON.parse(ev.data);
+        if (sobre.event === 'message') leerMensaje(sobre.message);
+      } catch (err) { /* ignorar */ }
+    };
+    fuente.onerror = function () {
+      conexion(false);
+      fuente.close();
+      // La TV pierde el WiFi o suspende la página: reconectar y ponerse al día.
+      var espera = Math.min(1000 * Math.pow(2, intento++), 15000);
+      setTimeout(function () { ponerseAlDia(topico); escuchar(topico); }, espera);
+    };
+  }
+
+  function ver(gameId) {
+    location.hash = gameId; // recargar la TV no pierde la partida
+    el('entrada').style.display = 'none';
+    el('pizarra').style.display = 'flex';
+    conexion(false);
+    var topico = 'dmto-' + gameId;
+    ponerseAlDia(topico);
+    escuchar(topico);
+  }
+
+  el('entrar').onclick = function () {
+    var gameId = parseCodigo(el('codigo').value);
+    if (!gameId) {
+      el('error').textContent = 'Ese código no parece válido';
+      return;
+    }
+    ver(gameId);
+  };
+  el('codigo').onkeyup = function (ev) {
+    el('error').textContent = '';
+    if (ev.keyCode === 13) el('entrar').click(); // Enter del control remoto
+  };
+
+  // ¿Ya venía un código en la URL? (favorito de la TV o enlace compartido)
+  var deUrl = parseCodigo(location.hash.replace('#', ''));
+  if (deUrl) ver(deUrl);
+})();
+</script>
+</body>
+</html>
